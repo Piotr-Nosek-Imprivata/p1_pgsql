@@ -39,6 +39,7 @@
 -define(PG_CLOSE_COMPLETE, $3).
 -define(PG_PORTAL_SUSPENDED, $s).
 -define(PG_NO_DATA, $n).
+-define(PG_NOTIFICATION, $A).
 
 -export([start/1, start_link/1]).
 
@@ -57,10 +58,10 @@
 
 -import(pgsql_util, [option/3]).
 -import(pgsql_util, [socket/2, close/1, controlling_process/2, starttls/2]).
--import(pgsql_util, [send/2, send_int/2, send_msg/3]).
--import(pgsql_util, [recv_msg/2, recv_msg/1, recv_byte/2, recv_byte/1]).
+-import(pgsql_util, [send/2]).
+-import(pgsql_util, [recv_msg/2, recv_byte/2]).
 -import(pgsql_util, [string/1, make_pair/2, split_pair/2]).
--import(pgsql_util, [count_string/1, to_string/2]).
+-import(pgsql_util, [to_string/2]).
 -import(pgsql_util, [coldescs/3, datacoldescs/3]).
 -import(pgsql_util, [to_integer/1, to_atom/1]).
 
@@ -421,6 +422,9 @@ code_change(_OldVsn, State, _Extra) ->
 
 
 %% Socket closed or socket error messages.
+handle_info({notification, {_Channel, _Payload}} = Notification, State) ->
+    State#state.driver ! Notification,
+    {noreply, State};
 handle_info({socket, _Sock, Condition}, State) ->
     {stop, {socket, Condition}, State};
 handle_info(_Info, State) ->
@@ -662,6 +666,12 @@ decode_packet(Code, Packet, AsBin) ->
 	    Ret(portal_suspended, []);
 	?PG_CLOSE_COMPLETE ->
 	    Ret(close_complete, []);
+	?PG_NOTIFICATION ->
+	    <<_Pid:32/integer, Strings0/binary>> = Packet,
+	    {Channel, ChannelLen} = to_string(Strings0, AsBin),
+	    <<_:ChannelLen/binary, 0/integer, MaybePayload/binary>> = Packet,
+	    {Payload, _} = to_string(MaybePayload, AsBin),
+	    Ret(notification, {Channel, Payload});
 	$t ->
 	    <<_NParams:16/integer, OidsP/binary>> = Packet,
 	    Oids = pgsql_util:oids(OidsP, []),
