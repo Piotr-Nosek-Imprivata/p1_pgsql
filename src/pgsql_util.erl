@@ -252,6 +252,9 @@ decode_col({_Name, _Format, _ColNumber, int8, _Size, _Modifier, _TableOID}, Valu
 decode_col({_Name, _Format, _ColNumber, numeric, _Size, _Modifier, _TableOID}, Value, _AsBin) ->
     N = decode_numeric(Value),
     {numeric, N};
+decode_col({_Name, _Format, _ColNumber, DT, _Size, _Modifier, _TableOID}, Value, _AsBin)
+  when DT == date; DT == time; DT == timetz; DT == timestamp; DT == timestamptz; DT == interval ->
+    {DT, pgsql_datetime:decode(DT, Value)};
 decode_col({_Name, _Format, _ColNumber, Oid, _Size, _Modifier, _TableOID}, Value, _AsBin) ->
     {Oid, Value}.
 
