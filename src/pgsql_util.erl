@@ -234,6 +234,8 @@ decode_row([Type|TypeTail], [Value|ValueTail], Out0, AsBin) ->
 %    if AsBin -> Value;
 %       true -> binary_to_list(Value)
 %    end;
+decode_col({_Name, _Format, _ColNumber, Type, _Size, _Modifier, _TableOID}, null, _AsBin) ->
+    {Type, null};
 decode_col({_Name, _Format, _ColNumber, bool, _Size, _Modifier, _TableOID}, Value, _AsBin) ->
     B = case Value of
             <<0>> -> <<"0">>;
