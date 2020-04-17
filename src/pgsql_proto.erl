@@ -669,7 +669,7 @@ decode_packet(Code, Packet, AsBin) ->
 	?PG_NOTIFICATION ->
 	    <<_Pid:32/integer, Strings0/binary>> = Packet,
 	    {Channel, ChannelLen} = to_string(Strings0, AsBin),
-	    <<_:ChannelLen/binary, 0/integer, MaybePayload/binary>> = Packet,
+	    <<_Pid:32/integer, _:ChannelLen/binary, 0/integer, MaybePayload/binary>> = Packet,
 	    {Payload, _} = to_string(MaybePayload, AsBin),
 	    Ret(notification, {Channel, Payload});
 	$t ->
