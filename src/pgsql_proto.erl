@@ -422,8 +422,8 @@ code_change(_OldVsn, State, _Extra) ->
 
 
 %% Socket closed or socket error messages.
-handle_info({notification, {_Channel, _Payload}} = Notification, State) ->
-    State#state.driver ! Notification,
+handle_info({pgsql, {notification, {_Channel, _Payload}}} = Notification, State) ->
+    deliver(State, Notification),
     {noreply, State};
 handle_info({socket, _Sock, Condition}, State) ->
     {stop, {socket, Condition}, State};
