@@ -497,6 +497,8 @@ process_equery(State, Log) ->
 				   AsBin);
 	{pgsql, Any} ->
 	    process_equery(State, [Any|Log])
+	after timer:seconds(10) ->
+	    erlang:error(process_equery_timeout)
     end.
 
 process_equery_datarow(Types, Log, Info={Command, Desc, Status}, AsBin) ->
