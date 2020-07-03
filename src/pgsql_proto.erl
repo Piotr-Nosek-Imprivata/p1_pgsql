@@ -497,7 +497,9 @@ process_equery(State, Log) ->
 				   AsBin);
 	{pgsql, Any} ->
 	    process_equery(State, [Any|Log])
-	after timer:seconds(10) ->
+	%% Close enough to infinity for our purpose,
+	%% yet we'll get a message in logs that something is wrong.
+	after timer:seconds(120) ->
 	    erlang:error(process_equery_timeout)
     end.
 
