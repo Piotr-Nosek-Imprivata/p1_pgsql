@@ -489,12 +489,14 @@ process_equery(State, Log) ->
 	    process_equery(State, Log);
 	{pgsql, {bind_complete, _}} ->
 	    process_equery(State, Log);
+	{pgsql, {no_data, _}} ->
+	    AsBin = State#state.as_binary,
+	    process_equery_datarow([], Log, {undefined, [], undefined}, AsBin);
 	{pgsql, {row_description, Descs}} ->
 	    OidMap = State#state.oidmap,
 	    AsBin = State#state.as_binary,
 	    {ok, Descs1} = pgsql_util:decode_descs(OidMap, Descs),
-	    process_equery_datarow(Descs1, Log, {undefined, Descs, undefined},
-				   AsBin);
+	    process_equery_datarow(Descs1, Log, {undefined, Descs, undefined}, AsBin);
 	{pgsql, Any} ->
 	    process_equery(State, [Any|Log])
 	%% Close enough to infinity for our purpose,
@@ -505,7 +507,6 @@ process_equery(State, Log) ->
 
 process_equery_datarow(Types, Log, Info={Command, Desc, Status}, AsBin) ->
     receive
-	%%
 	{pgsql, {command_complete, Command1}} ->
 	    process_equery_datarow(Types, Log, {Command1, Desc, Status}, AsBin);
 	{pgsql, {ready_for_query, Status1}} ->
