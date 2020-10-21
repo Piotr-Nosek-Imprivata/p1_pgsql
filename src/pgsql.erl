@@ -11,10 +11,11 @@
 -export([connect/1, connect/4, connect/5, connect/6]).
 
 -export([squery/2, squery/3,
-	 pquery/3,
+	 pquery/3, pquery/4,
 	 terminate/1,
-	 prepare/3, unprepare/2,
-	 execute/3]).
+	 prepare/3, prepare/4,
+	 unprepare/2, unprepare/3,
+	 execute/3, execute/4]).
 
 
 connect(Host, Database, User, Password) ->
@@ -82,6 +83,9 @@ squery(Db, Query, Timeout) ->
 pquery(Db, Query, Params) ->
     gen_server:call(Db, {equery, {Query, Params}}).
 
+pquery(Db, Query, Params, Timeout) ->
+    gen_server:call(Db, {equery, {Query, Params}}, Timeout).
+
 %%% prepare(Db, Name, Query) -> {ok, Status, ParamTypes, ResultTypes}
 %%% Status = idle | transaction | failed_transaction
 %%% ParamTypes = [atom()]
@@ -89,10 +93,16 @@ pquery(Db, Query, Params) ->
 prepare(Db, Name, Query) ->
     gen_server:call(Db, {prepare, {Name, Query}}).
 
+prepare(Db, Name, Query, Timeout) ->
+    gen_server:call(Db, {prepare, {Name, Query}}, Timeout).
+
 %%% unprepare(Db, Name) -> ok | timeout | ...
 %%% Name = atom()
 unprepare(Db, Name) ->
     gen_server:call(Db, {unprepare, Name}).
+
+unprepare(Db, Name, Timeout) ->
+    gen_server:call(Db, {unprepare, Name}, Timeout).
 
 %%% execute(Db, Name, Params) -> {ok, Result} | timeout | ...
 %%% Result = {'INSERT', NRows} |
@@ -103,3 +113,6 @@ unprepare(Db, Name) ->
 %%% Row = list()
 execute(Db, Name, Params) when is_list(Params) ->
     gen_server:call(Db, {execute, {Name, Params}}).
+
+execute(Db, Name, Params, Timeout) when is_list(Params) ->
+    gen_server:call(Db, {execute, {Name, Params}}, Timeout).
