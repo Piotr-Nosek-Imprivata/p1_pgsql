@@ -417,6 +417,9 @@ do_connect([{IP, Family}|AddrsFamilies], Port, Timeout, _Err) ->
     case gen_tcp:connect(IP, Port, [{active, false}, binary,
 				    {packet, raw}, Family], Timeout) of
 	{ok, Sock} ->
+	    {ok, [{recbuf, RecBufSize}, {sndbuf, SndBufSize}]} =
+                 inet:getopts(Sock, [recbuf, sndbuf]),
+             inet:setopts(Sock, [{buffer, max(RecBufSize, SndBufSize)}]),
 	    {ok, Sock};
 	{error, _} = Err ->
 	    do_connect(AddrsFamilies, Port, Timeout, Err)
